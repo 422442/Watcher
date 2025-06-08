@@ -18,6 +18,7 @@
         .text-purple-500 { color: #8b5cf6; }
         .text-indigo-600 { color: #4f46e5; }
         .text-orange-500 { color: #f97316; }
+        .text-red-500 { color: #ef4444; }
         .text-red-600 { color: #dc2626; }
         .text-green-500 { color: #22c55e; }
         .text-teal-600 { color: #0d9488; }
@@ -25,6 +26,7 @@
         .to-indigo-600 { --tw-gradient-to: #4f46e5; }
         .from-orange-500 { --tw-gradient-from: #f97316; --tw-gradient-to: rgb(249 115 22 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
         .to-red-600 { --tw-gradient-to: #dc2626; }
+        .from-red-500 { --tw-gradient-from: #ef4444; --tw-gradient-to: rgb(239 68 68 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
         .from-green-500 { --tw-gradient-from: #22c55e; --tw-gradient-to: rgb(34 197 94 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
         .to-teal-600 { --tw-gradient-to: #0d9488; }
     </style>
@@ -72,10 +74,54 @@
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Initial Data and State ---
         const initialFranchisesData = {
+          marvel_cinematic_universe: {
+            name: "Marvel Cinematic Universe",
+            color: "from-red-500 to-red-600",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l1.72-1.72v5.69a.75.75 0 001.5 0v-5.69l1.72 1.72a.75.75 0 001.06 0z" clip-rule="evenodd" /></svg>`,
+            items: [
+                { id: 'mcu1', title: 'Agents of S.H.I.E.L.D. season 2', type: 'ABC series', year: '2014-2015', watched: false },
+                { id: 'mcu2', title: 'Agent Carter season 1', type: 'ABC series', year: '2015', watched: false },
+                { id: 'mcu3', title: 'Daredevil season 1', type: 'Netflix series', year: '2015', watched: false },
+                { id: 'mcu4', title: 'Agents of S.H.I.E.L.D. season 3', type: 'ABC series', year: '2015-2016', watched: false },
+                { id: 'mcu5', title: 'Jessica Jones season 1', type: 'Netflix series', year: '2015', watched: false },
+                { id: 'mcu6', title: 'Agent Carter season 2', type: 'ABC series', year: '2016', watched: false },
+                { id: 'mcu7', title: 'Daredevil season 2', type: 'Netflix series', year: '2016', watched: false },
+                { id: 'mcu8', title: 'Agents of S.H.I.E.L.D. season 4 (Watch Slingshot after S4.E8)', type: 'ABC series', year: '2016-2017', watched: false },
+                { id: 'mcu9', title: 'Agents of S.H.I.E.L.D.: Slingshot', type: 'Web series', year: '2016', watched: false },
+                { id: 'mcu10', title: 'Luke Cage season 1', type: 'Netflix series', year: '2016', watched: false },
+                { id: 'mcu11', title: 'Iron Fist season 1', type: 'Netflix series', year: '2017', watched: false },
+                { id: 'mcu12', title: 'The Defenders season 1', type: 'Netflix series', year: '2017', watched: false },
+                { id: 'mcu13', title: 'Inhumans season 1', type: 'ABC series', year: '2017', watched: false },
+                { id: 'mcu14', title: 'The Punisher season 1', type: 'Netflix series', year: '2017', watched: false },
+                { id: 'mcu15', title: 'Runaways season 1', type: 'Young adult series', year: '2017-2018', watched: false },
+                { id: 'mcu16', title: 'Agents of S.H.I.E.L.D. season 5', type: 'ABC series', year: '2017-2018', watched: false },
+                { id: 'mcu17', title: 'Jessica Jones season 2', type: 'Netflix series', year: '2018', watched: false },
+                { id: 'mcu18', title: 'Cloak & Dagger season 1', type: 'Young adult series', year: '2018', watched: false },
+                { id: 'mcu19', title: 'Luke Cage season 2', type: 'Netflix series', year: '2018', watched: false },
+                { id: 'mcu20', title: 'Iron Fist season 2', type: 'Netflix series', year: '2018', watched: false },
+                { id: 'mcu21', title: 'Daredevil season 3', type: 'Netflix series', year: '2018', watched: false },
+                { id: 'mcu22', title: 'Runaways season 2', type: 'Young adult series', year: '2018', watched: false },
+                { id: 'mcu23', title: 'The Punisher season 2', type: 'Netflix series', year: '2019', watched: false },
+                { id: 'mcu24', title: 'Cloak & Dagger season 2', type: 'Young adult series', year: '2019', watched: false },
+                { id: 'mcu25', title: 'Agents of S.H.I.E.L.D. season 6', type: 'ABC series', year: '2019', watched: false },
+                { id: 'mcu26', title: 'Jessica Jones season 3', type: 'Netflix series', year: '2019', watched: false },
+                { id: 'mcu27', title: 'Runaways season 3', type: 'Young adult series', year: '2019', watched: false },
+                { id: 'mcu28', title: 'Agents of S.H.I.E.L.D. season 7', type: 'ABC series', year: '2020', watched: false },
+                { id: 'mcu29', title: 'Helstrom season 1', type: 'Adventure into Fear series', year: '2020', watched: false },
+                { id: 'mcu30', title: 'Captain America: Brave New World', type: 'Film', year: '2025', watched: false },
+                { id: 'mcu31', title: 'Daredevil: Born Again season 1', type: 'Phase Five series', year: '2025 (Expected)', watched: false },
+                { id: 'mcu32', title: 'Thunderbolts*', type: 'Film', year: '2025', watched: false },
+                { id: 'mcu33', title: 'Ironheart season 1', type: 'Phase Five series', year: '2025 (Expected)', watched: false },
+                { id: 'mcu34', title: 'The Fantastic Four', type: 'Film', year: '2025', watched: false },
+                { id: 'mcu35', title: 'Eyes of Wakanda season 1', type: 'Phase Six series', year: '2025 (Expected)', watched: false },
+                { id: 'mcu36', title: 'Marvel Zombies season 1', type: 'Phase Six series', year: '2025 (Expected)', watched: false },
+                { id: 'mcu37', title: 'Wonder Man season 1', type: 'Phase Six series', year: '2025 (Expected)', watched: false },
+            ],
+          },
           transformers: {
             name: "Transformers",
             color: "from-purple-500 to-indigo-600",
@@ -125,7 +171,7 @@
         };
 
         let franchises = JSON.parse(JSON.stringify(initialFranchisesData)); // Deep copy
-        let expandedFranchiseId = 'transformers';
+        let expandedFranchiseId = 'marvel_cinematic_universe';
 
         // --- Firebase Globals ---
         const firebaseConfig = {
@@ -150,12 +196,13 @@
         // --- Helper Functions ---
         function getTypeIcon(type) {
             const iconClasses = "w-4 h-4 mr-2 text-gray-400";
-            switch (type) {
-                case 'Film': return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>`;
-                case 'Short film': return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>`;
-                case 'Web series': return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>`;
-                default: return '';
+            if (type.includes('series')) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>`;
             }
+             if (type.includes('Film')) {
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>`;
+            }
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>`;
         }
 
         // --- Rendering Logic ---
@@ -191,8 +238,8 @@
                         <div class="flex items-center">
                             <div class="relative" style="width: ${size}px; height: ${size}px;">
                                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 ${size} ${size}">
-                                    <circle class="text-gray-700" stroke="currentColor" stroke-width="${strokeWidth}" fill="transparent" r="${radius}" cx="${size/2}" cy="${size/2}"></circle>
-                                    <circle class="text-${franchiseData.color.split(' ')[0].split('-')[1]}-500 transition-all duration-500" stroke="currentColor" stroke-width="${strokeWidth}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round" fill="transparent" r="${radius}" cx="${size/2}" cy="${size/2}"></circle>
+                                    <circle class="text-gray-700/50" stroke="currentColor" stroke-width="${strokeWidth}" fill="transparent" r="${radius}" cx="${size/2}" cy="${size/2}"></circle>
+                                    <circle class="text-white transition-all duration-500" stroke="currentColor" stroke-width="${strokeWidth}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round" fill="transparent" r="${radius}" cx="${size/2}" cy="${size/2}"></circle>
                                 </svg>
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <span class="text-lg font-bold text-white">${Math.round(percentage)}%</span>
@@ -246,7 +293,7 @@
                 if (db && userId) {
                     try {
                         const docRef = doc(db, 'artifacts', canvasAppId, 'users', userId);
-                        await setDoc(docRef, { watchlist: JSON.stringify(franchises) });
+                        await setDoc(docRef, { watchlist: JSON.stringify(franchises) }, { merge: true });
                     } catch (error) {
                         console.error("Error updating watchlist:", error);
                     }
@@ -275,11 +322,20 @@
         });
         
         copyIdBtn.addEventListener('click', () => {
-            if (navigator.clipboard && userIdInput.value) {
-                navigator.clipboard.writeText(userIdInput.value).then(() => {
+            if (userIdInput.value) {
+                // Use a temporary textarea to copy text to support all browsers.
+                const textArea = document.createElement("textarea");
+                textArea.value = userIdInput.value;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
                     copyIdBtn.textContent = 'Copied!';
-                    setTimeout(() => { copyIdBtn.textContent = 'Copy'; }, 2000);
-                });
+                } catch (err) {
+                    copyIdBtn.textContent = 'Failed!';
+                }
+                document.body.removeChild(textArea);
+                setTimeout(() => { copyIdBtn.textContent = 'Copy'; }, 2000);
             }
         });
 
@@ -315,7 +371,9 @@
                     const oldData = oldDocSnap.data();
                     if (oldData.watchlist) {
                         const newDocRef = doc(db, 'artifacts', canvasAppId, 'users', newUserId);
+                        // This will overwrite the new user's data with the old one.
                         await setDoc(newDocRef, { watchlist: oldData.watchlist });
+                        // We don't need to manually merge here, the snapshot listener will trigger and re-render.
                         restoreStatus.textContent = "Progress restored successfully!";
                         restoreStatus.className = "text-xs text-center mt-2 h-4 text-green-500";
                         restoreIdInput.value = '';
@@ -360,7 +418,8 @@
                     userId = user.uid;
                 } else {
                     try {
-                        await signInAnonymously(auth);
+                        const userCredential = await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
                     } catch (error) {
                         console.error("Anonymous sign-in failed:", error);
                     }
@@ -379,24 +438,43 @@
             const docRef = doc(db, 'artifacts', canvasAppId, 'users', userId);
             
             onSnapshot(docRef, (docSnap) => {
+                let remoteData;
                 if (docSnap.exists() && docSnap.data().watchlist) {
-                    const remoteData = JSON.parse(docSnap.data().watchlist);
-                    const mergedData = JSON.parse(JSON.stringify(initialFranchisesData)); // Start with a fresh copy
-                    
-                    Object.keys(remoteData).forEach(franchiseId => {
-                        if (mergedData[franchiseId]) {
-                            mergedData[franchiseId].items = mergedData[franchiseId].items.map(localItem => {
+                    try {
+                        remoteData = JSON.parse(docSnap.data().watchlist);
+                    } catch(e) {
+                         console.error("Failed to parse remote data:", e);
+                         remoteData = {};
+                    }
+                }
+
+                // If remote data exists, merge it with the initial template
+                if (remoteData) {
+                     const mergedData = JSON.parse(JSON.stringify(initialFranchisesData));
+                     Object.keys(mergedData).forEach(franchiseId => {
+                        if (remoteData[franchiseId]) {
+                             mergedData[franchiseId].items.forEach(localItem => {
                                 const remoteItem = remoteData[franchiseId].items.find(ri => ri.id === localItem.id);
-                                return remoteItem ? { ...localItem, watched: remoteItem.watched } : localItem;
+                                if (remoteItem) {
+                                    localItem.watched = remoteItem.watched;
+                                }
                             });
                         }
-                    });
-                    franchises = mergedData;
+                     });
+                     // Check for new franchises in remote that are not in local initial data (e.g. from another client)
+                      Object.keys(remoteData).forEach(franchiseId => {
+                        if (!mergedData[franchiseId]) {
+                            mergedData[franchiseId] = remoteData[franchiseId];
+                        }
+                      });
+                     franchises = mergedData;
                 } else {
-                    console.log("No existing data found for this user, saving initial state.");
-                    const initialDataString = JSON.stringify(initialFranchisesData);
-                    setDoc(docRef, { watchlist: initialDataString });
+                    // No remote data, save the initial state to Firestore
+                    console.log("No existing data found, saving initial state.");
+                    setDoc(docRef, { watchlist: JSON.stringify(initialFranchisesData) });
+                    franchises = JSON.parse(JSON.stringify(initialFranchisesData));
                 }
+
                 renderApp();
             }, (error) => {
                 console.error("Error fetching watchlist from Firestore:", error);
