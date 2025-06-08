@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Franchise Watchlist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles to match the React version's look and feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .text-purple-500 { color: #8b5cf6; }
+        .text-indigo-600 { color: #4f46e5; }
+        .text-orange-500 { color: #f97316; }
+        .text-red-600 { color: #dc2626; }
+        .text-green-500 { color: #22c55e; }
+        .text-teal-600 { color: #0d9488; }
+        .from-purple-500 { --tw-gradient-from: #8b5cf6; --tw-gradient-to: rgb(139 92 246 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+        .to-indigo-600 { --tw-gradient-to: #4f46e5; }
+        .from-orange-500 { --tw-gradient-from: #f97316; --tw-gradient-to: rgb(249 115 22 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+        .to-red-600 { --tw-gradient-to: #dc2626; }
+        .from-green-500 { --tw-gradient-from: #22c55e; --tw-gradient-to: rgb(34 197 94 / 0); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+        .to-teal-600 { --tw-gradient-to: #0d9488; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="min-h-screen p-4 sm:p-6 lg:p-8 relative">
+        <!-- Background Texture -->
+        <div class="absolute top-0 left-0 w-full h-full bg-cover bg-center opacity-10" 
+             style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); z-index: 0;">
+        </div>
+
+        <div class="max-w-4xl mx-auto relative z-10">
+            <header class="text-center mb-10">
+                <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-2">
+                    Franchise Watchlist Tracker
+                </h1>
+                <p class="text-lg text-gray-400">
+                    Track your movie marathon progress.
+                </p>
+            </header>
+
+            <main id="franchise-container">
+                <!-- Franchise trackers will be dynamically inserted here -->
+            </main>
+            
+            <footer class="text-center mt-12 text-gray-500 text-sm">
+                <p>Your progress is saved automatically.</p>
+                <p id="user-id-display" class="mt-1 text-xs truncate"></p>
+            </footer>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Initial Data and State ---
+        const initialFranchisesData = {
+          transformers: {
+            name: "Transformers",
+            color: "from-purple-500 to-indigo-600",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-white"><path d="M12.728.832c.22-.492.822-.492 1.042 0l2.353 5.247 5.247 2.353c.492.22.492.822 0 1.042l-5.247 2.353-2.353 5.247c-.22.492-.822-.492-1.042 0l-2.353-5.247-5.247-2.353c-.492-.22-.492.822 0-1.042l5.247-2.353L12.728.832zM21 21l-3.5-3.5M3 21l3.5-3.5M12 16v5"></path></svg>`,
+            items: [
+              { id: 't1', title: 'Transformers: Beginnings', type: 'Short film', year: '2007', watched: false },
+              { id: 't2', title: 'Transformers: Cyber Missions', type: 'Web series', year: '2010', watched: false },
+              { id: 't3', title: 'Transformers: The Last Knight', type: 'Film', year: '2017', watched: false },
+              { id: 't4', title: 'Bumblebee', type: 'Film', year: '2018', watched: false },
+              { id: 't5', title: 'Bumblebee\'s First Life on Earth', type: 'Web series', year: '2019', watched: false },
+              { id: 't6', title: 'Agent Burns: Welcome to Sector 7', type: 'Short film', year: '2019', watched: false },
+              { id: 't7', title: 'Sector 7 Adventures: The Battle at Half Dome', type: 'Short film', year: '2019', watched: false },
+              { id: 't8', title: 'Transformers: Rise of the Beasts', type: 'Film', year: '2023', watched: false },
+            ],
+          },
+          fast_furious: {
+            name: "Fast & Furious",
+            color: "from-orange-500 to-red-600",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-white"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C20.7 10.4 21 10.2 21 10V7c0-.6-.4-1-1-1h-2"/><path d="M15 7h- oksidkerd-5l-2-2"/><path d="M2 17h10c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C11.7 10.4 12 10.2 12 10V7c0-.6-.4-1-1-1H2"/><path d="M7 17v-3"/><path d="M5 10v4"/><path d="M3 10v4"/></svg>`,
+            items: [
+              { id: 'ff1', title: 'The Turbo Charged Prelude for 2 Fast 2 Furious', type: 'Short film', year: '2003', watched: false },
+              { id: 'ff2', title: '2 Fast 2 Furious', type: 'Film', year: '2003', watched: false },
+              { id: 'ff3', title: 'The Fast and the Furious: Tokyo Drift', type: 'Film', year: '2006', watched: false },
+              { id: 'ff4', title: 'Fast & Furious', type: 'Film', year: '2009', watched: false },
+              { id: 'ff5', title: 'Los Bandoleros', type: 'Short film', year: '2009', watched: false },
+              { id: 'ff6', title: 'Fast Five', type: 'Film', year: '2011', watched: false },
+              { id: 'ff7', title: 'Fast & Furious 6', type: 'Film', year: '2013', watched: false },
+              { id: 'ff8', title: 'Furious 7', type: 'Film', year: '2015', watched: false },
+              { id: 'ff9', title: 'The Fate of the Furious', type: 'Film', year: '2017', watched: false },
+              { id: 'ff10', title: 'Hobbs & Shaw', type: 'Film', year: '2019', watched: false },
+              { id: 'ff11', title: 'F9', type: 'Film', year: '2021', watched: false },
+              { id: 'ff12', title: 'Fast X', type: 'Film', year: '2023', watched: false },
+            ],
+          },
+          jurassic_park: {
+            name: "Jurassic Park",
+            color: "from-green-500 to-teal-600",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 text-white"><path d="M14.25 2.11c.28-.5.83-.75 1.36-.61s.9.72.76 1.25l-2.09 7.24a.75.75 0 0 1-1.39-.4L14.25 2.1Z"/><path d="M12.35 9.04 7.5 12a1.5 1.5 0 0 0 0 2.4l.2.35-2.09 2.08a.5.5 0 0 0 .7.71l2.09-2.09.35.2a1.5 1.5 0 0 0 2.4 0l4.85-2.85a.5.5 0 0 0-.4-.9Z"/><path d="M12.35 9.04 14.5 3.5a.5.5 0 0 1 .9 0l1.45 2.9a1 1 0 0 0 .8.6l3.2.5a.5.5 0 0 1 .3 1l-2.3 2.2a1 1 0 0 0-.3.9l.6 3.2a.5.5 0 0 1-.7.5l-2.9-1.5a1 1 0 0 0-1 0l-2.9 1.5a.5.5 0 0 1-.7-.5l.6-3.2a1 1 0 0 0-.3-.9L8.6 8.5a.5.5 0 0 1 .3-1l3.2-.5a1 1 0 0 0 .8-.6Z"/></svg>`,
+            items: [
+              { id: 'jp1', title: 'Jurassic World', type: 'Film', year: '2015', watched: false },
+              { id: 'jp2', title: 'Jurassic World: Fallen Kingdom', type: 'Film', year: '2018', watched: false },
+              { id: 'jp3', title: 'Battle at Big Rock', type: 'Short film', year: '2019', watched: false },
+              { id: 'jp4', title: 'Jurassic World Dominion prologue', type: 'Short film', year: '2021', watched: false },
+              { id: 'jp5', title: 'Jurassic World Dominion', type: 'Film', year: '2022', watched: false },
+            ],
+          },
+        };
+
+        let franchises = JSON.parse(JSON.stringify(initialFranchisesData)); // Deep copy
+        let expandedFranchiseId = 'transformers';
+
+        // --- Firebase Globals ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyAi3YIvEY-ozimrLWiooksKvW8SkIjA79Y",
+          authDomain: "watcher-4a1b9.firebaseapp.com",
+          projectId: "watcher-4a1b9",
+          storageBucket: "watcher-4a1b9.appspot.com",
+          messagingSenderId: "723569698495",
+          appId: "1:723569698495:web:dd21237133f6eabd67c80a",
+          measurementId: "G-MJ9CEH4JV4"
+        };
+        // The Canvas App ID for the firestore path. Fallback to projectId if not in Canvas.
+        const canvasAppId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
+        let db, auth, userId, isAuthReady = false;
+
+        const container = document.getElementById('franchise-container');
+        const userIdDisplay = document.getElementById('user-id-display');
+
+        // --- Helper Functions ---
+        function getTypeIcon(type) {
+            const iconClasses = "w-4 h-4 mr-2 text-gray-400";
+            switch (type) {
+                case 'Film': return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>`;
+                case 'Short film': return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>`;
+                case 'Web series': return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${iconClasses}"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>`;
+                default: return '';
+            }
+        }
+
+        // --- Rendering Logic ---
+        function renderApp() {
+            if (!container) return;
+            container.innerHTML = ''; // Clear previous content
+
+            for (const [id, franchiseData] of Object.entries(franchises)) {
+                const isExpanded = id === expandedFranchiseId;
+                const watchedCount = franchiseData.items.filter(item => item.watched).length;
+                const totalCount = franchiseData.items.length;
+                const percentage = totalCount > 0 ? (watchedCount / totalCount) * 100 : 0;
+                
+                const size = 60;
+                const strokeWidth = 6;
+                const radius = (size - strokeWidth) / 2;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percentage / 100) * circumference;
+
+                const franchiseEl = document.createElement('div');
+                franchiseEl.className = "bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg mb-8 overflow-hidden";
+                franchiseEl.innerHTML = `
+                    <div data-franchise-id="${id}" class="franchise-header p-6 flex items-center justify-between cursor-pointer bg-gradient-to-r ${franchiseData.color}">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 mr-4 bg-black/20 rounded-lg flex items-center justify-center">
+                                ${franchiseData.icon}
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white">${franchiseData.name}</h2>
+                                <p class="text-white/80">${watchedCount} of ${totalCount} watched</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="relative" style="width: ${size}px; height: ${size}px;">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 ${size} ${size}">
+                                    <circle class="text-gray-700" stroke="currentColor" stroke-width="${strokeWidth}" fill="transparent" r="${radius}" cx="${size/2}" cy="${size/2}"></circle>
+                                    <circle class="text-${franchiseData.color.split(' ')[0].split('-')[1]}-500 transition-all duration-500" stroke="currentColor" stroke-width="${strokeWidth}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round" fill="transparent" r="${radius}" cx="${size/2}" cy="${size/2}"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-lg font-bold text-white">${Math.round(percentage)}%</span>
+                                </div>
+                            </div>
+                            <div class="ml-4 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-down ${isExpanded ? 'hidden' : 'block'}"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-up ${isExpanded ? 'block' : 'hidden'}"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-container p-6 ${isExpanded ? '' : 'hidden'}">
+                        <ul>
+                            ${franchiseData.items.map(item => `
+                                <li class="flex items-center justify-between p-3 transition-all duration-300 bg-gray-800/50 rounded-lg mb-2 hover:bg-gray-700/70">
+                                    <div class="flex items-center overflow-hidden">
+                                        <button data-item-id="${item.id}" data-franchise-id="${id}" class="watchlist-toggle w-6 h-6 rounded-full border-2 flex items-center justify-center mr-4 transition-all duration-300 cursor-pointer flex-shrink-0 ${item.watched ? 'bg-green-500 border-green-400' : 'border-gray-500 hover:border-green-500'}">
+                                            ${item.watched ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-white"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+                                        </button>
+                                        <div class="flex flex-col overflow-hidden">
+                                            <span class="truncate transition-colors duration-300 ${item.watched ? 'text-gray-500 line-through' : 'text-white'}">
+                                                ${item.title}
+                                            </span>
+                                            <div class="flex items-center text-sm text-gray-400 mt-1">
+                                                ${getTypeIcon(item.type)}
+                                                <span>${item.type}</span>
+                                                <span class="mx-2">·</span>
+                                                <span>${item.year}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+                container.appendChild(franchiseEl);
+            }
+        }
+
+        // --- Event Handling ---
+        async function handleToggle(franchiseId, itemId) {
+            const franchise = franchises[franchiseId];
+            const itemIndex = franchise.items.findIndex(item => item.id === itemId);
+
+            if (itemIndex !== -1) {
+                franchise.items[itemIndex].watched = !franchise.items[itemIndex].watched;
+                renderApp(); // Optimistic update of the UI
+
+                // Persist to Firestore
+                if (db && userId) {
+                    try {
+                        const docRef = doc(db, 'artifacts', canvasAppId, 'users', userId);
+                        await setDoc(docRef, { watchlist: JSON.stringify(franchises) });
+                    } catch (error) {
+                        console.error("Error updating watchlist:", error);
+                        // In a real app, you might revert the change here
+                    }
+                }
+            }
+        }
+
+        function handleExpand(franchiseId) {
+            expandedFranchiseId = expandedFranchiseId === franchiseId ? null : franchiseId;
+            renderApp();
+        }
+
+        container.addEventListener('click', (e) => {
+            const toggleButton = e.target.closest('.watchlist-toggle');
+            if (toggleButton) {
+                const { franchiseId, itemId } = toggleButton.dataset;
+                handleToggle(franchiseId, itemId);
+                return;
+            }
+
+            const header = e.target.closest('.franchise-header');
+            if (header) {
+                const { franchiseId } = header.dataset;
+                handleExpand(franchiseId);
+            }
+        });
+
+        // --- Firebase Initialization and Data Sync ---
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    setLogLevel('debug');
+                } else {
+                    console.warn("Firebase config not found. App will run in local mode without saving.");
+                    renderApp();
+                    return;
+                }
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                renderApp(); // Render with initial data even if firebase fails
+                return;
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                } else {
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (error) {
+                        console.error("Anonymous sign-in failed:", error);
+                    }
+                }
+                isAuthReady = true;
+                if(userId) {
+                    userIdDisplay.textContent = `User ID: ${userId}`;
+                    listenForData();
+                }
+            });
+        });
+
+        function listenForData() {
+            if (!isAuthReady || !db || !userId) return;
+            
+            const docRef = doc(db, 'artifacts', canvasAppId, 'users', userId);
+            
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists() && docSnap.data().watchlist) {
+                    const remoteData = JSON.parse(docSnap.data().watchlist);
+                    const mergedData = JSON.parse(JSON.stringify(initialFranchisesData)); // Start with a fresh copy
+                    
+                    Object.keys(remoteData).forEach(franchiseId => {
+                        if (mergedData[franchiseId]) {
+                            mergedData[franchiseId].items = mergedData[franchiseId].items.map(localItem => {
+                                const remoteItem = remoteData[franchiseId].items.find(ri => ri.id === localItem.id);
+                                return remoteItem ? { ...localItem, watched: remoteItem.watched } : localItem;
+                            });
+                        }
+                    });
+                    franchises = mergedData;
+                } else {
+                    // No document yet, save the initial state to Firestore
+                    console.log("No existing data found, saving initial state.");
+                    const initialDataString = JSON.stringify(initialFranchisesData);
+                    setDoc(docRef, { watchlist: initialDataString });
+                }
+                renderApp();
+            }, (error) => {
+                console.error("Error fetching watchlist from Firestore:", error);
+                renderApp();
+            });
+        }
+    </script>
+
+</body>
+</html>
