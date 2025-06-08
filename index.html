@@ -32,7 +32,6 @@
 <body class="bg-gray-900 text-white">
 
     <div class="min-h-screen p-4 sm:p-6 lg:p-8 relative">
-        <!-- Background Texture -->
         <div class="absolute top-0 left-0 w-full h-full bg-cover bg-center opacity-10" 
              style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png'); z-index: 0;">
         </div>
@@ -48,12 +47,23 @@
             </header>
 
             <main id="franchise-container">
-                <!-- Franchise trackers will be dynamically inserted here -->
-            </main>
+                </main>
             
             <footer class="text-center mt-12 text-gray-500 text-sm">
-                <p>Your progress is saved automatically.</p>
-                <p id="user-id-display" class="mt-1 text-xs truncate"></p>
+                <p>Your progress is saved automatically to an anonymous account.</p>
+                <div class="mt-4 p-4 bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-lg max-w-lg mx-auto">
+                    <p class="text-center font-bold mb-2 text-white">Save Your Progress!</p>
+                    <p class="text-xs text-center text-gray-400 mb-3">Clearing browser data will sign you out. Copy and save this ID to restore your progress later.</p>
+                    <div class="flex items-center bg-gray-900 rounded-md p-2">
+                        <input id="user-id-input" type="text" readonly class="flex-grow bg-transparent border-none text-white text-sm truncate p-1 focus:ring-0" placeholder="Loading your User ID...">
+                        <button id="copy-id-btn" class="ml-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-3 rounded-md text-sm transition-colors">Copy</button>
+                    </div>
+                    <div class="mt-3 flex items-center">
+                        <input id="restore-id-input" type="text" placeholder="Paste a saved ID to restore progress" class="flex-grow bg-gray-700 border border-gray-600 rounded-md p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-gray-500">
+                        <button id="restore-btn" class="ml-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md text-sm transition-colors">Restore</button>
+                    </div>
+                    <p id="restore-status" class="text-xs text-center mt-2 h-4 transition-all"></p>
+                </div>
             </footer>
         </div>
     </div>
@@ -62,7 +72,7 @@
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Initial Data and State ---
         const initialFranchisesData = {
@@ -127,12 +137,15 @@
           appId: "1:723569698495:web:dd21237133f6eabd67c80a",
           measurementId: "G-MJ9CEH4JV4"
         };
-        // The Canvas App ID for the firestore path. Fallback to projectId if not in Canvas.
         const canvasAppId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
         let db, auth, userId, isAuthReady = false;
 
         const container = document.getElementById('franchise-container');
-        const userIdDisplay = document.getElementById('user-id-display');
+        const userIdInput = document.getElementById('user-id-input');
+        const copyIdBtn = document.getElementById('copy-id-btn');
+        const restoreIdInput = document.getElementById('restore-id-input');
+        const restoreBtn = document.getElementById('restore-btn');
+        const restoreStatus = document.getElementById('restore-status');
 
         // --- Helper Functions ---
         function getTypeIcon(type) {
@@ -236,7 +249,6 @@
                         await setDoc(docRef, { watchlist: JSON.stringify(franchises) });
                     } catch (error) {
                         console.error("Error updating watchlist:", error);
-                        // In a real app, you might revert the change here
                     }
                 }
             }
@@ -261,6 +273,69 @@
                 handleExpand(franchiseId);
             }
         });
+        
+        copyIdBtn.addEventListener('click', () => {
+            if (navigator.clipboard && userIdInput.value) {
+                navigator.clipboard.writeText(userIdInput.value).then(() => {
+                    copyIdBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyIdBtn.textContent = 'Copy'; }, 2000);
+                });
+            }
+        });
+
+        restoreBtn.addEventListener('click', async () => {
+            const oldUserId = restoreIdInput.value.trim();
+            const newUserId = userId;
+
+            if (!oldUserId) {
+                restoreStatus.textContent = "Please paste an ID to restore.";
+                restoreStatus.className = "text-xs text-center mt-2 h-4 text-orange-500";
+                return;
+            }
+            if (oldUserId === newUserId) {
+                restoreStatus.textContent = "You are already using this ID.";
+                restoreStatus.className = "text-xs text-center mt-2 h-4 text-orange-500";
+                return;
+            }
+            if (!db || !newUserId) {
+                restoreStatus.textContent = "Restore service is not ready. Please wait.";
+                restoreStatus.className = "text-xs text-center mt-2 h-4 text-red-600";
+                return;
+            }
+
+            restoreBtn.disabled = true;
+            restoreBtn.textContent = '...';
+            restoreStatus.textContent = '';
+
+            try {
+                const oldDocRef = doc(db, 'artifacts', canvasAppId, 'users', oldUserId);
+                const oldDocSnap = await getDoc(oldDocRef);
+
+                if (oldDocSnap.exists()) {
+                    const oldData = oldDocSnap.data();
+                    if (oldData.watchlist) {
+                        const newDocRef = doc(db, 'artifacts', canvasAppId, 'users', newUserId);
+                        await setDoc(newDocRef, { watchlist: oldData.watchlist });
+                        restoreStatus.textContent = "Progress restored successfully!";
+                        restoreStatus.className = "text-xs text-center mt-2 h-4 text-green-500";
+                        restoreIdInput.value = '';
+                    } else {
+                        restoreStatus.textContent = "No watchlist data found for that ID.";
+                        restoreStatus.className = "text-xs text-center mt-2 h-4 text-orange-500";
+                    }
+                } else {
+                    restoreStatus.textContent = "No data found for the provided ID.";
+                    restoreStatus.className = "text-xs text-center mt-2 h-4 text-red-600";
+                }
+            } catch (error) {
+                console.error("Error during restore:", error);
+                restoreStatus.textContent = "An error occurred during restore.";
+                restoreStatus.className = "text-xs text-center mt-2 h-4 text-red-600";
+            } finally {
+                restoreBtn.disabled = false;
+                restoreBtn.textContent = 'Restore';
+            }
+        });
 
         // --- Firebase Initialization and Data Sync ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -269,7 +344,6 @@
                     const app = initializeApp(firebaseConfig);
                     db = getFirestore(app);
                     auth = getAuth(app);
-                    setLogLevel('debug');
                 } else {
                     console.warn("Firebase config not found. App will run in local mode without saving.");
                     renderApp();
@@ -293,7 +367,7 @@
                 }
                 isAuthReady = true;
                 if(userId) {
-                    userIdDisplay.textContent = `User ID: ${userId}`;
+                    userIdInput.value = userId;
                     listenForData();
                 }
             });
@@ -319,8 +393,7 @@
                     });
                     franchises = mergedData;
                 } else {
-                    // No document yet, save the initial state to Firestore
-                    console.log("No existing data found, saving initial state.");
+                    console.log("No existing data found for this user, saving initial state.");
                     const initialDataString = JSON.stringify(initialFranchisesData);
                     setDoc(docRef, { watchlist: initialDataString });
                 }
